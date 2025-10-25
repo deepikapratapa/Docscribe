@@ -227,7 +227,7 @@ docscribe/
 
 📜 License
 
-MIT License © 2025 [Your Team Name]
+MIT License © 2025 THEDIVERGENTS
 For academic and research use only.
 
 ⸻
