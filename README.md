@@ -62,7 +62,7 @@ Supports both **macOS** 🖥️ and **Windows** 💻 environments.
 
 ### 🧩 Step 1 — Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/docscribe.git
+git clone https://github.com/deepikapratapa/Docscribe.git
 cd docscribe
 ```
 ### 🍏 macOS Setup
