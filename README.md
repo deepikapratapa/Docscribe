@@ -39,6 +39,60 @@ Healthcare professionals spend up to **40–50%** of their workday documenting c
 ⬇ Export (JSON / PDF / Markdown)
 ```
 ---
+## 🗂️ Repository Structure
+```
+DocScribe/
+├── README.md                        # Project overview, usage, and architecture
+├── requirements.txt                  # Python dependencies
+├── docscribe_app.py                  # Streamlit app (voice + text interface)
+│
+├── src/                              # Core modules
+│   ├── __init__.py
+│   ├── extract_clinical.py           # Clinical note extraction (Flan-T5)
+│   ├── compose_note.py               # SOAP note composer
+│   ├── asr_whisper.py                # Whisper ASR (speech-to-text)
+│
+├── notebooks/                        # Development and evaluation notebooks
+│   ├── 01_prompt_tuning.ipynb        # Prompt exploration and few-shot design
+│   ├── 02_extractor_dev.ipynb        # Core extraction module development
+│   ├── 03_validation_eval.ipynb      # Evaluation metrics & F1 benchmarking
+│
+├── data/                             # Example input files
+│   ├── test.wav
+│   
+│
+└── docscribe_thumbnail.png
+```
+## ⚙️ Setup & Installation
+
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/deepikapratapa/DocScribe.git
+cd DocScribe
+```
+### 2️⃣ Create a Virtual Environment (optional but recommended)
+```bash
+python -m venv venv
+source venv/bin/activate      # macOS / Linux
+venv\Scripts\activate  
+```
+
+### 3️⃣ Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+```bash
+# macOS
+brew install ffmpeg
+
+# Ubuntu / Debian
+sudo apt-get install ffmpeg
+```
+
+### 4️⃣ Run the App
+```bash
+streamlit run docscribe_app.py
+```
 
 ## 🧠 Core Features
 
