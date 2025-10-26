@@ -6,6 +6,10 @@
 
 ---
 
+## 🎥 Demo Video
+
+[![Watch the demo](docscribe_thumbnail.png)](https://youtu.be/1QC1WcAI1aY "DocScribe Demo — When clinicians speak, the record writes itself")
+
 ## 🌟 Overview
 
 Healthcare professionals spend up to **40–50%** of their workday documenting care.  
