@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Tuple
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 
 MODEL_NAME = os.environ.get("DOCSCRIBE_MODEL", "google/flan-t5-large")
-TOKENIZERS_PARALLELISM = os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 try:
     import torch
@@ -273,6 +273,69 @@ def _looks_like_imaging_or_lab(s: str) -> bool:
     w = (s or "").lower()
     return any(tok in w for tok in (HEURISTICS["imaging"] | HEURISTICS["labs"]))
 
+def _strip_leading_verbs(s: str) -> str:
+    return re.sub(r"^\s*(?:and\s+)?(?:start|begin|initiate|order|recommend|advise|continue)\s+", "", (s or ""), flags=re.IGNORECASE).strip()
+
+def _post_clean_orders(items: List[str]) -> List[str]:
+    """Keep Orders to tests/procedures only; strip meds/therapy artifacts."""
+    cleaned = []
+    for s in items:
+        if not s:
+            continue
+        s2 = s.strip().rstrip(".")
+        # drop med/dosage phrases from Orders (they belong in Plan)
+        if _is_dosage_like(s2):
+            continue
+        # drop conjunction/verb artifacts like "and start ..."
+        if re.search(r"^\s*(and\s+start|and\s+begin)\b", s2, re.IGNORECASE):
+            continue
+        # drop obvious therapy words (go to Plan)
+        if re.search(r"\b(rice|rest|ice|compression|elevation|lifestyle|counseling)\b", s2, re.IGNORECASE):
+            continue
+        cleaned.append(s2)
+    return cleaned
+
+def _dedupe_between_orders_plan(orders: List[str], plan: List[str]) -> Tuple[List[str], List[str]]:
+    """If an item is in both: keep dosage-like items in Plan, imaging/labs in Orders."""
+    o_keep, p_keep = [], []
+    o_seen, p_seen = set(), set()
+
+    # First pass: keep canonical sides
+    for s in orders:
+        key = _canonical(s)
+        if not key or key in o_seen: continue
+        o_seen.add(key); o_keep.append(s)
+
+    for s in plan:
+        key = _canonical(s)
+        if not key or key in p_seen: continue
+        p_seen.add(key); p_keep.append(s)
+
+    # Resolve overlaps
+    overlap = o_seen & p_seen
+    if overlap:
+        o_final, p_final = [], []
+        for s in o_keep:
+            k = _canonical(s)
+            if k in overlap:
+                # If also dosage-like → should live in Plan, drop from Orders
+                if _is_dosage_like(s):
+                    continue
+                # If test-like → keep in Orders (will be removed from Plan)
+                o_final.append(s)
+            else:
+                o_final.append(s)
+        for s in p_keep:
+            k = _canonical(s)
+            if k in overlap:
+                # keep here only if dosage-like; else drop (test duplicated)
+                if _is_dosage_like(s):
+                    p_final.append(s)
+            else:
+                p_final.append(s)
+        return o_final, p_final
+    return o_keep, p_keep
+
 def _route_items(orders: List[str], plan: List[str]) -> Tuple[List[str], List[str]]:
     o2, p2 = [], []
     for it in orders:
@@ -304,7 +367,9 @@ def _route_items(orders: List[str], plan: List[str]) -> Tuple[List[str], List[st
                 seen.add(key); out.append(x.strip().rstrip("."))
         return out
 
-    return dedup(o2), dedup(p2)
+    o2, p2 = dedup(o2), dedup(p2)
+    # Cross-dedupe with routing rules
+    return _dedupe_between_orders_plan(o2, p2)
 
 def _merge_unique(dst: List[str], src: List[str]) -> List[str]:
     seen = {_canonical(x) for x in dst if x}
@@ -319,7 +384,7 @@ def _merge_unique(dst: List[str], src: List[str]) -> List[str]:
 
 def _extract_before_rule_out(text: str) -> List[str]:
     out = []
-    for m in re.finditer(r"([^\.]*?)\s+to\s+rule\s+out\b", text or "", flags=re.IGNORECASE):
+    for m in re.finditer(r"([^.]*?)\s+to\s+rule\s+out\b", text or "", flags=re.IGNORECASE):
         lhs = m.group(1).strip().rstrip(".")
         chunks = re.split(r"\b(?:and|then|,|;)\b", lhs, flags=re.IGNORECASE)
         out.extend([c.strip().strip(",;.") for c in chunks if c.strip()])
@@ -329,62 +394,6 @@ def _extract_before_rule_out(text: str) -> List[str]:
         if lx not in seen:
             seen.add(lx); dedup.append(x)
     return dedup
-
-def _post_clean_orders(items: List[str]) -> List[str]:
-    """Keep Orders to tests/procedures only; strip meds/therapy artifacts."""
-    cleaned = []
-    for s in items:
-        if not s:
-            continue
-        s2 = s.strip().rstrip(".")
-        # drop med/dosage phrases from Orders (they belong in Plan)
-        if _is_dosage_like(s2):
-            continue
-        # drop conjunction/verb artifacts like "and start ..."
-        if re.search(r"^\s*(and\s+start|and\s+begin)\b", s2, re.IGNORECASE):
-            continue
-        # drop obvious therapy words (go to Plan)
-        if re.search(r"\b(rice|rest|ice|compression|elevation|lifestyle|counseling)\b", s2, re.IGNORECASE):
-            continue
-        cleaned.append(s2)
-    return cleaned
-
-
-def _first_imaging_or_lab_token(s: str) -> str:
-    """Return the first imaging/lab token present, else ''."""
-    w = (s or "").lower()
-    for tok in (HEURISTICS["imaging"] | HEURISTICS["labs"]):
-        if tok in w:
-            return tok
-    return ""
-
-
-def _split_mixed_test_and_med(s: str) -> List[str]:
-    """
-    If an item contains BOTH a test (e.g., 'urinalysis', 'x-ray') AND a dosage-like med,
-    split into ['<test>', '<med dosing>']. Otherwise return [s].
-    """
-    s2 = (s or "").strip().rstrip(".")
-    if not s2:
-        return []
-
-    has_dose = _is_dosage_like(s2)
-    test_tok = _first_imaging_or_lab_token(s2)
-    if has_dose and test_tok:
-        # test fragment: keep the token minimally as the order (e.g., 'urinalysis', 'chest x-ray')
-        test_phrase = test_tok
-        # lift the first dosage phrase as the med
-        doses = _extract_dosage_phrases(s2)
-        med_phrase = doses[0] if doses else ""
-        out = []
-        if test_phrase:
-            # small normalization for x-ray side (e.g., 'ankle x-ray' / 'chest x-ray')
-            # if there is a body part, leave normalization to existing _normalize_order_phrase
-            out.append(test_phrase)
-        if med_phrase:
-            out.append(med_phrase)
-        return [x for x in out if x]
-    return [s2] if s2 else []  
 
 ACTION_PATTERNS = [
     ("orders", rf"\b{ORDER_VERBS}\b\s+([^\.]+)"),
@@ -516,6 +525,14 @@ def _refine_empty_fields(transcript: str, data: Dict[str, Any]) -> Dict[str, Any
         if k in ("orders", "plan"):
             arr = [_clip_action_core(x, k) for x in arr]
             arr = [_normalize_order_phrase(x) for x in arr]
+            # extra cleanup: remove action verbs and dedupe
+            arr = [_strip_leading_verbs(x) for x in arr]
+            seen_local, arr2 = set(), []
+            for x in arr:
+                key = _canonical(x)
+                if key and key not in seen_local:
+                    seen_local.add(key); arr2.append(x)
+            arr = arr2
 
         # de-hedge diagnosis labels
         if k == "diagnosis":
@@ -526,6 +543,9 @@ def _refine_empty_fields(transcript: str, data: Dict[str, Any]) -> Dict[str, Any
         for it in arr:
             s = (it or "").strip().rstrip(".")
             if not s:
+                continue
+            # keep follow-up out of arrays
+            if s.lower().startswith("follow up") or _TIME_RE.search(s):
                 continue
             if k in ("orders", "plan") and not _keep_minimal(s):
                 continue
@@ -543,6 +563,9 @@ def _refine_empty_fields(transcript: str, data: Dict[str, Any]) -> Dict[str, Any
     filled["orders"] = _merge_unique(filled.get("orders", []), derived.get("orders", []))
     filled["plan"]   = _merge_unique(filled.get("plan",   []), derived.get("plan",   []))
 
+    # 🚿 Post-clean Orders (remove dosage/therapy artifacts)
+    filled["orders"] = _post_clean_orders(filled.get("orders", []))
+
     # Prune Plan noise
     pruned_plan = []
     for s in filled.get("plan", []):
@@ -554,7 +577,7 @@ def _refine_empty_fields(transcript: str, data: Dict[str, Any]) -> Dict[str, Any
         pruned_plan.append(s2)
     filled["plan"] = pruned_plan
 
-    # Canonical routing
+    # Canonical routing + cross-dedupe
     filled["orders"], filled["plan"] = _route_items(
         filled.get("orders", []), filled.get("plan", [])
     )

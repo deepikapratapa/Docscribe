@@ -25,7 +25,9 @@ from src.extract_clinical import extract_note  # self-contained module
 from src.compose_note import compose_note
 
 st.set_page_config(page_title="DocScribe", page_icon="🩺", layout="centered")
-st.title("🩺 DocScribe — Speech-to-Note")
+st.title("🩺 DocScribe")
+st.caption("When clinicians speak, the record writes itself")
+st.divider()
 
 # -------------------------
 # Caching & warm-up helpers
@@ -223,24 +225,5 @@ gold_refs = [
         "follow_up": "2 days",
     },
 ]
-
-st.markdown("---")
-if st.checkbox("📊 Show quick metrics on demo cases"):
-    demos = [
-        "Fever and cough for 3 days. Mild shortness of breath. Likely CAP. Order chest X-ray and start azithromycin 500 mg daily x5. Follow up in 2 days.",
-        "Left ankle pain after inversion injury yesterday. Likely lateral ankle sprain. X-ray ankle to rule out fracture. RICE and ibuprofen 400 mg PRN.",
-        "Dysuria and urinary frequency for 2 days. No fever or flank pain. Likely uncomplicated UTI. Urinalysis and nitrofurantoin 100 mg BID x5 days.",
-    ]
-    rows = []
-    for i, demo in enumerate(demos):
-        pred, _ = extract_note(demo)
-        g = gold_refs[i]
-        row = {"case": i+1}
-        for k in ["chief_complaint","assessment","diagnosis","orders","plan","follow_up"]:
-            _,_,f1 = field_overlap_score(pred.get(k, []), g.get(k, []))
-            row[k] = round(f1, 2)
-        rows.append(row)
-    st.table(rows)
-
 # Footer
 st.caption("DocScribe • Whisper ASR + FLAN extraction • For demo use only (not medical advice).")
