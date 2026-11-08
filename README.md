@@ -1,4 +1,5 @@
 # 🧠 DocScribe — Voice to Structured Clinical Notes
+**Started at Gator Hack IV (UF AI Days 2025) | AI in Healthcare**
 
 > DocScribe turns clinician dictation into a structured, reviewable note: Whisper transcribes the audio, Flan-T5 plus rule-based post-processing extracts predefined clinical fields, and every extracted value is linked back to the transcript text it came from.
 
@@ -22,6 +23,11 @@ Clinicians spend a large share of their day on documentation. DocScribe explores
 - 📤 **Export** the note and its evidence as JSON, or the SOAP note as text
 
 ---
+
+## 🕰️ Project History
+
+- **2025, Gator Hack IV:** first version built as a hackathon project: Whisper transcription, Flan-T5 extraction, rule-based post-processing and the Streamlit app.
+- **After the hackathon:** continued development: evidence linking (character spans + highlighting), a reproducible evaluation script, corrected gold labels, and a field-level error analysis.
 
 ## 🧱 Architecture
 
@@ -106,7 +112,7 @@ python -m eval.evaluate
 | Plan | 0.33 |
 | Diagnosis | 0.00 |
 
-**Note on earlier numbers.** An earlier version of this project reported an average F1 of about 0.74. That figure does not reproduce with the current code, most likely because the model and rules changed afterwards (including the switch to Flan-T5 Large). The numbers above are the reproducible ones.
+**Note on earlier numbers.** The hackathon version reported an average F1 of about 0.74. That figure does not reproduce with the current code, most likely because the model and rules changed afterwards (including the switch to Flan-T5 Large). The numbers above are the reproducible ones.
 
 **Gold label corrections.** Re-checking the labels found three errors, now fixed:
 1. Case 2 orders: `ankle X-ray` → `X-ray ankle` (the transcript's wording, since values must be verbatim).
@@ -146,9 +152,19 @@ python -m eval.evaluate
 - [OpenAI Whisper](https://github.com/openai/whisper)
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers)
 - [Streamlit](https://streamlit.io/)
+- [UF AI Days Gator Hack IV 2025](https://ai.ufl.edu) *(original hackathon submission)*
 
 ---
 
 ## 📜 License
 
-**MIT License © 2025 Deepika Sarala Pratapa**
+**MIT License © 2025 Deepika Sarala Pratapa & Rohit Bogulla**
+
+---
+
+## 👩‍💻 Contributors
+
+| Name | Role |
+|------|------|
+| **Deepika Sarala Pratapa** | Design and implementation of the pipeline: Whisper integration, Flan-T5 extraction, rule-based post-processing, evaluation, evidence linking; post-hackathon development and error analysis |
+| **Rohit Bogulla** | Front-end integration , Hackathon teammate|
