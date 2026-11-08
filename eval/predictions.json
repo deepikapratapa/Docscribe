@@ -1,0 +1,36 @@
+[
+  {
+    "chief_complaint": "Fever and cough",
+    "assessment": "Likely CAP",
+    "diagnosis": [],
+    "orders": [
+      "chest X-ray"
+    ],
+    "plan": [
+      "azithromycin 500 mg daily x5"
+    ],
+    "follow_up": "2 days"
+  },
+  {
+    "chief_complaint": "left ankle pain",
+    "assessment": "Likely lateral ankle sprain",
+    "diagnosis": [],
+    "orders": [
+      "X-ray ankle"
+    ],
+    "plan": [
+      "RICE and ibuprofen 400 mg PRN"
+    ],
+    "follow_up": ""
+  },
+  {
+    "chief_complaint": "Dysuria",
+    "assessment": "Likely uncomplicated UTI",
+    "diagnosis": [],
+    "orders": [
+      "Urinalysis and nitrofurantoin 100 mg BID x5 day"
+    ],
+    "plan": [],
+    "follow_up": "2 days"
+  }
+]

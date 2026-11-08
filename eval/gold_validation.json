@@ -1,0 +1,54 @@
+[
+ {
+  "transcript": "Fever and cough for 3 days. Mild shortness of breath. Likely CAP. Order chest X-ray and start azithromycin 500 mg daily x5. Follow up in 2 days.",
+  "gold": {
+   "chief_complaint": "Fever and cough",
+   "assessment": "Likely CAP",
+   "diagnosis": [
+    "CAP"
+   ],
+   "orders": [
+    "chest X-ray"
+   ],
+   "plan": [
+    "azithromycin 500 mg daily x5"
+   ],
+   "follow_up": "2 days"
+  }
+ },
+ {
+  "transcript": "Left ankle pain after inversion injury yesterday. Likely lateral ankle sprain. X-ray ankle to rule out fracture. RICE and ibuprofen 400 mg PRN.",
+  "gold": {
+   "chief_complaint": "Left ankle pain",
+   "assessment": "Likely lateral ankle sprain",
+   "diagnosis": [
+    "lateral ankle sprain"
+   ],
+   "orders": [
+    "X-ray ankle"
+   ],
+   "plan": [
+    "RICE",
+    "ibuprofen 400 mg PRN"
+   ],
+   "follow_up": ""
+  }
+ },
+ {
+  "transcript": "Dysuria and urinary frequency for 2 days. No fever or flank pain. Likely uncomplicated UTI. Urinalysis and nitrofurantoin 100 mg BID x5 days.",
+  "gold": {
+   "chief_complaint": "Dysuria",
+   "assessment": "Likely uncomplicated UTI",
+   "diagnosis": [
+    "uncomplicated UTI"
+   ],
+   "orders": [
+    "Urinalysis"
+   ],
+   "plan": [
+    "nitrofurantoin 100 mg BID x5 days"
+   ],
+   "follow_up": ""
+  }
+ }
+]

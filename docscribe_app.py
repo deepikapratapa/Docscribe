@@ -23,6 +23,7 @@ except Exception:
 # --- Clinical extractor + composer ---
 from src.extract_clinical import extract_note  # self-contained module
 from src.compose_note import compose_note
+from src.evidence import build_evidence, highlight_html
 
 st.set_page_config(page_title="DocScribe", page_icon="🩺", layout="centered")
 st.title("🩺 DocScribe")
@@ -127,6 +128,7 @@ if transcript:
     with st.spinner("Extracting structured note…"):
         t0 = time.time()
         note_dict, raw = extract_note(transcript)
+        evidence = build_evidence(note_dict, transcript)
         soap, summary = compose_note(note_dict)
         dt = round(time.time() - t0, 2)
 
@@ -142,11 +144,17 @@ if transcript:
     st.markdown("#### 📦 JSON")
     st.code(json.dumps(note_dict, indent=2))
 
+    st.markdown("#### 🔍 Evidence")
+    st.markdown(highlight_html(transcript, evidence), unsafe_allow_html=True)
+    missing = [s["value"] for items in evidence.values() for s in items if s["start"] is None]
+    if missing:
+        st.warning("No exact transcript match for: " + ", ".join(missing))
+
     # -------------------------
     # Downloads
     # -------------------------
     soap_bytes = io.BytesIO(soap.encode("utf-8"))
-    json_bytes = io.BytesIO(json.dumps(note_dict, indent=2).encode("utf-8"))
+    json_bytes = io.BytesIO(json.dumps({"note": note_dict, "evidence": evidence}, indent=2).encode("utf-8"))
     col1, col2 = st.columns(2)
     with col1:
         st.download_button("⬇️ Download SOAP (.txt)", data=soap_bytes, file_name="soap.txt", mime="text/plain")
