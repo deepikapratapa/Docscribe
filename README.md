@@ -1,5 +1,4 @@
 # 🧠 DocScribe — Voice to Structured Clinical Notes
-**Gator Hack IV | AI in Healthcare**
 
 > DocScribe turns clinician dictation into a structured, reviewable note: Whisper transcribes the audio, Flan-T5 plus rule-based post-processing extracts predefined clinical fields, and every extracted value is linked back to the transcript text it came from.
 
@@ -107,7 +106,7 @@ python -m eval.evaluate
 | Plan | 0.33 |
 | Diagnosis | 0.00 |
 
-**Note on earlier numbers.** During the hackathon an average F1 of about 0.74 was reported. That figure does not reproduce with the current code, most likely because the model and rules changed afterwards (including the switch to Flan-T5 Large). The numbers above are the reproducible ones.
+**Note on earlier numbers.** An earlier version of this project reported an average F1 of about 0.74. That figure does not reproduce with the current code, most likely because the model and rules changed afterwards (including the switch to Flan-T5 Large). The numbers above are the reproducible ones.
 
 **Gold label corrections.** Re-checking the labels found three errors, now fixed:
 1. Case 2 orders: `ankle X-ray` → `X-ray ankle` (the transcript's wording, since values must be verbatim).
@@ -147,19 +146,9 @@ python -m eval.evaluate
 - [OpenAI Whisper](https://github.com/openai/whisper)
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers)
 - [Streamlit](https://streamlit.io/)
-- [UF AI Days Gator Hack IV 2025](https://ai.ufl.edu) *(Hackathon Submission)*
 
 ---
 
 ## 📜 License
 
-**MIT License © 2025 Deepika Sarala Pratapa & Rohit Bogulla**
-
----
-
-## 👩‍💻 Contributors
-
-| Name | Role | Focus |
-|------|------|-------|
-| **Deepika Sarala Pratapa** | Co-Developer | Clinical NLP, Evaluation |
-| **Rohit Bogulla** | Co-Developer | Whisper ASR, Streamlit, Frontend Integration |
+**MIT License © 2025 Deepika Sarala Pratapa**
